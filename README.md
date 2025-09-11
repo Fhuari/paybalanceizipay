@@ -1,6 +1,6 @@
-# PayBalance Izipay
+# Plugin de pago con Izipay para cualquier monto
 
-**PayBalance Izipay** es un plugin de WordPress que permite integrar pagos en línea mediante la pasarela **Izipay Perú**.  
+**Izipay** es un plugin de WordPress que permite integrar pagos en línea mediante la pasarela **Izipay Perú**.  
 Su objetivo es brindar una solución sencilla, rápida y segura para aceptar pagos en tu sitio web.
 
 ---
