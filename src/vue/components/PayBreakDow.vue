@@ -6,13 +6,13 @@
           <span class="label">
             <i class="bi bi-cash-stack me-1"></i>Base amount
           </span>
-          <span class="value">${{ breakdown.base }}</span>
+          <span class="value">{{ currencySymbol }}{{ breakdown.base }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
+        <li v-if="breakdown.commission > 0" class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0 bg-transparent">
           <span class="label">
-            <i class="bi bi-percent me-1"></i>Payment fee (5.5%)
+           {{ commissionValue }} <i class="bi bi-percent me-1"></i>Bank fee 
           </span>
-          <span class="value">${{ breakdown.igv }}</span>
+          <span class="value">{{ currencySymbol }}{{ breakdown.commission }}</span>
         </li>
       </ul>
 
@@ -20,7 +20,7 @@
         <span class="total-label">
           <i class="bi bi-wallet2 me-1"></i>Total to pay
         </span>
-        <span class="total-value">${{ breakdown.total }}</span>
+        <span class="total-value">{{ currencySymbol }}{{ breakdown.total }}</span>
       </div>
     </div>
   </div>
@@ -37,17 +37,37 @@ export default {
       type: [Number, String],
       default: 0,
       required: true
+    },
+    currencySymbol: {
+      type: String,
+      default: '$'
+    },
+    commissionType: {
+      type: String,
+      default: 'percent'
+    },
+    commissionValue: {
+      type: [Number, String],
+      default: 0
     }
   },
   setup(props) {
-    const IGV_RATE = 0.055
-
+    const normalizeCommission = () => {
+      const raw = String(props.commissionValue || 0).replace(',', '.')
+      return Number(raw) || 0
+    }
     const breakdown = computed(() => {
-      const igv = props.amount * IGV_RATE
-      const total = props.amount + igv
+      const baseTotal = props.amount
+      const commissionValue = normalizeCommission()
+      const commission = commissionValue > 0
+        ? (props.commissionType === 'fixed'
+            ? commissionValue
+            : baseTotal * (commissionValue / 100))
+        : 0
+      const total = baseTotal + commission
       return {
         base: props.amount,
-        igv: parseFloat(igv.toFixed(2)),
+        commission: parseFloat(commission.toFixed(2)),
         total: parseFloat(total.toFixed(2))
       }
     })

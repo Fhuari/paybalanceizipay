@@ -17,7 +17,6 @@ class Izipaynotify {
      public function setRecipientsFromOptions() {
         $emails = array_map('trim', explode(',', get_option('pearpay_mail')));
         $this->to = $emails;
-        
     }
     public function notify($data,$orderId) {
 

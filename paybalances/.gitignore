@@ -1,0 +1,40 @@
+# --- WordPress plugin ---
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Dependencias ---
+/node_modules/
+/vendor/
+
+# --- Compilados ---
+/dist/
+/assets/
+/build/
+/public/js/
+/public/css/
+/public/mix-manifest.json
+
+# --- Archivos de entorno ---
+.env
+.env.local
+.env.*.local
+
+# --- Archivos del sistema ---
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- Paquetes ---
+/*.zip
+/*.tar.gz
+
+# --- Lock files (opcional, si no quieres subirlos) ---
+/package-lock.json
+/yarn.lock
+/pnpm-lock.yaml
+/composer.lock

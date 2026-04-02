@@ -18,37 +18,36 @@
       v-model:open="modalVisible"
       title="Payment Confirmation"
       :footer="null"
+      :zIndex="9999"
+      :maskClosable="false"
     >
-      <p class="text-center mb-3">{{ message }}</p>
+      <a-result :status="resultStatus" :title="resultTitle" class="payment-result">
+        <template #subTitle>
+          <span>{{ message }}</span>
+        </template>
+      </a-result>
 
-      <!-- Mostrar resumen dentro del modal -->
-      <div v-if="orderStatus" class="payment-summary">
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <td class="fw-bold">Email:</td>
-              <td>{{ PaidData.email }}</td>
-            </tr>
-            <tr>
-              <td class="fw-bold">Order ID:</td>
-              <td>{{ PaidData.orderId }}</td>
-            </tr>
-            <tr>
-              <td class="fw-bold">Order Total:</td>
-              <td>${{ PaidData.amount }}</td>
-            </tr>
-            <tr>
-              <td class="fw-bold">Status:</td>
-              <td class="text-success fw-bold">{{ PaidData.orderStatus }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <a-card v-if="orderStatus" size="small" class="payment-summary">
+        <a-descriptions :column="1" size="small">
+          <a-descriptions-item label="Email">
+            {{ PaidData.email }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Order ID">
+            {{ PaidData.orderId }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Order Total">
+            ${{ PaidData.amount }}
+          </a-descriptions-item>
+          <a-descriptions-item label="Status">
+            <a-tag color="green">{{ PaidData.orderStatus }}</a-tag>
+          </a-descriptions-item>
+        </a-descriptions>
+      </a-card>
 
-      <!-- Botón para ir a la página de inicio -->
-      <div class="text-center mt-4">
-        <a href="/" class="btn btn-success rounded-0 text-white me-2">Go Home</a>
-        <!-- <button class="btn btn-secondary rounded-0" @click="modalVisible = false">Close</button> -->
+      <div class="payment-actions">
+        <a-button type="primary" href="/" block>
+          Go Home
+        </a-button>
       </div>
     </a-modal>
   </div>
@@ -56,7 +55,7 @@
 
 
 <script setup>
-import { ref, onMounted, toRefs } from 'vue'
+import { ref, onMounted, toRefs, computed } from 'vue'
 import KRGlue from '@lyracom/embedded-form-glue'
 import axios from 'axios'
 
@@ -71,13 +70,17 @@ const props = defineProps({
   datapay: Object,
   devmode:String
 })
-const { datapay, subject, name, email, title, amount,devmode} = toRefs(props)
+const { datapay, subject, name, email, title, amount, devmode, publicKey } = toRefs(props)
 
 // States
 const message = ref('')
 const modalVisible = ref(false)
 const orderStatus = ref(false)
 const loading = ref(false)
+const settings = (window.PEARPAY && window.PEARPAY.settings) ? window.PEARPAY.settings : {}
+const successMessage = settings.confirm_message || 'Payment successful!'
+const resultStatus = computed(() => (orderStatus.value ? 'success' : 'error'))
+const resultTitle = computed(() => (orderStatus.value ? successMessage : 'Payment not completed'))
 
 const formdata = ref({
   totalpay: amount.value,
@@ -100,8 +103,7 @@ const PaidData = ref({
 const hookajax = ref()
 
 //*************************** Validation Page IZipay */
-const validatePayment = (paymentData) => {
-  console.log(paymentData)
+const validatePayment = async (paymentData) => {
   loading.value = true
   formdata.value.typePay = 'IZIPAY'
 
@@ -111,28 +113,8 @@ const validatePayment = (paymentData) => {
   DBS.append('nonce', hookajax.value.nonce)
   DBS.append('action', hookajax.value.action_validate)
 
-  axios
-    .post(hookajax.value.ajax_url, DBS)
-    .then((response) => {
-      console.log(response.data)
-      if (response.status === 200) {
-        message.value = 'Payment successful!'
-        modalVisible.value = true
-      } else {
-        message.value = 'There was an error validating the payment.'
-        modalVisible.value = true
-      }
-    })
-    .catch((error) => {
-      console.error(error)
-      message.value = 'There was an error validating the payment.'
-      modalVisible.value = true
-    })
-    .finally(() => {
-      loading.value = false
-    })
-
-  if (paymentData.clientAnswer.orderStatus === 'PAID') {
+  const isPaid = paymentData?.clientAnswer?.orderStatus === 'PAID'
+  if (isPaid) {
     orderStatus.value = true
     PaidData.value = {
       orderStatus: paymentData.clientAnswer.orderStatus,
@@ -140,6 +122,30 @@ const validatePayment = (paymentData) => {
       orderId: paymentData.clientAnswer.orderDetails.orderId,
       amount: paymentData.clientAnswer.orderDetails.orderTotalAmount / 100
     }
+    message.value = successMessage
+    modalVisible.value = true
+  } else {
+    message.value = 'Payment not completed or validation failed.'
+    modalVisible.value = true
+  }
+
+  try {
+    const response = await axios.post(hookajax.value.ajax_url, DBS)
+    console.log(response.data.success)
+    if (response.data.success) {
+      message.value = successMessage;
+      modalVisible.value = true
+    }
+    else{
+      message.value = 'There was an error validating the payment.'
+      modalVisible.value = true
+    }
+  } catch (error) {
+    console.error(error)
+    message.value = 'There was an error validating the payment.'
+    modalVisible.value = true
+  } finally {
+    loading.value = false
   }
 
   return false // prevenir redirección
@@ -149,11 +155,15 @@ const validatePayment = (paymentData) => {
 onMounted(() => {
   loading.value = true
   hookajax.value = PEARPAY
-  console.log(hookajax.value) 
-
   const endpoint = 'https://static.micuentaweb.pe'
   
-  const pubKey =devmode.value==='dev'?'93641145:testpublickey_rdVNd0OLHoCwgSjZMRhwrDA2i3JpNToT2evDswak87pRz':'93641145:publickey_lddMVVe8SvNwDlv6xNoYohGMJ3eZOha7TU9L53f3VGkH5';
+  const pubKey = (publicKey.value || '').trim()
+  if (!pubKey) {
+    loading.value = false
+    message.value = 'Public key not configured. Please check PEARPAY_IZIPAY_ENV and public key settings.'
+    modalVisible.value = true
+    return
+  }
 
   
   let formToken = ''
@@ -192,25 +202,30 @@ onMounted(() => {
 <style scoped>
 .payment-wrapper {
   max-width: 600px;
-  margin: auto;
+  margin: 0 auto;
   padding: 1rem;
 }
 
 .payment-form {
   display: flex;
+  align-items: center;
   justify-content: center;
+  width: 100%;
   margin-bottom: 1.5rem;
 }
 
 .payment-summary {
-  max-width: 600px;
-  margin: auto;
+  margin-top: 8px;
   border-radius: 10px;
 }
 
-.card-header {
-  background-color: #28a745;
-  font-size: 1.5rem;
-  font-weight: bold;
+.payment-result {
+  margin-bottom: 12px;
+}
+
+.payment-actions {
+  margin-top: 16px;
 }
 </style>
+
+

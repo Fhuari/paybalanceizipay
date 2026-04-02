@@ -1,12 +1,12 @@
 <template>
-  <span class="text-more">{{ translated }}</span>
+  <span > {{ translated }}  </span>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 
 // Idioma actual: puedes reemplazar esta línea por una fuente global como i18n o Pinia
-const currentLang = ref('en')// <-- Cambia esto dinámicamente si usas un store o configuración global
+const currentLang = ref('es')// <-- Cambia esto dinámicamente si usas un store o configuración global
 
 // Props individuales
 const props = defineProps({
