@@ -21,3 +21,4 @@ Su objetivo es brindar una solución sencilla, rápida y segura para aceptar pag
    ```bash
    cd wp-content/plugins
    git clone https://github.com/Fhuari/paybalanceizipay.git
+2. Contáctanos para cambiar las credenciales o agrega el número [+51 960 986 261](https://wa.me/51960986261).
