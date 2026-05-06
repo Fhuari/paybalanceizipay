@@ -1,8 +1,8 @@
 <?php
 /*
- * Plugin Name:       Pear Pay 
+ * Plugin Name:       Pear Pay
  * Plugin URI:        https://pearperu.com/plugins/
- * Description:       Plugin de pago Pear Peru para WordPress con integración Izipay.
+ * Description:       Plugin de pago Pear Peru para WordPress con integracion Izipay.
  * Version:           1.1.02
  * Requires at least: 5.2
  * Requires PHP:      8.2
@@ -15,83 +15,60 @@
  * Domain Path:       /languages
  */
 
-if (!defined('ABSPATH'))
-    exit; // Exit if accessed directly
-const PEAR_PAY_VERSION = '1.0.0';
-// define('PEAR_VERSION', '1.0.0');
+if (!defined('ABSPATH')) {
+    exit;
+}
 
-define('PEAR_PAY_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('PEAR_PAY_PLUGIN_URL', plugin_dir_url(__FILE__));
+if (!defined('PEAR_PAY_VERSION')) {
+    define('PEAR_PAY_VERSION', '1.1.02');
+}
 
+if (!defined('PEAR_PAY_PLUGIN_FILE')) {
+    define('PEAR_PAY_PLUGIN_FILE', __FILE__);
+}
 
-spl_autoload_register(function ($class) {
+if (!defined('PEAR_PAY_PLUGIN_DIR')) {
+    define('PEAR_PAY_PLUGIN_DIR', plugin_dir_path(__FILE__));
+}
+
+if (!defined('PEAR_PAY_PLUGIN_URL')) {
+    define('PEAR_PAY_PLUGIN_URL', plugin_dir_url(__FILE__));
+}
+
+spl_autoload_register(function (string $class): void {
     $prefix = 'PearPay\\';
-    $base_dir = __DIR__ . '/app/';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
+    $prefix_length = strlen($prefix);
+
+    if (strncmp($prefix, $class, $prefix_length) !== 0) {
         return;
     }
-    $relative_class = substr($class, $len);
-    $parts = explode('\\', $relative_class);
-    if (count($parts) > 1) {
-        $dir_map = array(
-            'Core' => 'core',
-            'Admin' => 'admin',
-            'Public' => 'public',
-            'Db' => 'Db',
-        );
-        if (isset($dir_map[$parts[0]])) {
-            $parts[0] = $dir_map[$parts[0]];
-        }
-    }
+    $relative_class = substr($class, $prefix_length);
+    $file = PEAR_PAY_PLUGIN_DIR . 'app/' . str_replace('\\', '/', $relative_class) . '.php';
 
-    $file = $base_dir . implode('/', $parts) . '.php';
-    if (!file_exists($file)) {
-        // Linux is case-sensitive; normalize directory segments (not class filename).
-        $alt_parts = $parts;
-        $last_index = count($alt_parts) - 1;
-        for ($i = 0; $i < $last_index; $i++) {
-            $alt_parts[$i] = strtolower($alt_parts[$i]);
-        }
-        $alt_file = $base_dir . implode('/', $alt_parts) . '.php';
-        if (file_exists($alt_file)) {
-            $file = $alt_file;
-        }
-    }
-    if (file_exists($file)) {
+    if (is_readable($file)) {
         require $file;
     }
 });
-if ( class_exists('PearPay\\Core\\Application') ) {
-    PearPay\Core\Application::init();
-} else {  
-    // Opcionalmente, mostrar un mensaje en el panel de administración
-    add_action('admin_notices', function() {
-        echo '<div class="error"><p>Error: La clase PearPay\Core\Application no se encontró. Por favor, asegúrese de que todos los archivos del plugin estén presentes.</p></div>';
-    });
-    return;
-}
-
-
-
-// require_once PEAR_PAY_PLUGIN_DIR . '/app/core/Aplication.php';
-// use PearPay\Core\PR_Aplication;
-// PR_Aplication::init(); // ✅
-  
-// 
-
-// $app = new Application();
-// $app->boot();
 
 register_activation_hook(__FILE__, 'pear_pay_activation');
 
-function pear_pay_activation()
+if (class_exists('PearPay\\Core\\Application')) {
+    PearPay\Core\Application::init();
+} else {
+    add_action('admin_notices', 'pear_pay_missing_application_notice');
+}
+
+function pear_pay_activation(): bool
 {
-    if (class_exists('PearPay\\Db\\Database')) {
-        PearPay\Db\Database::install();
+    if (class_exists('PearPay\\Database\\Database')) {
+        PearPay\Database\Database::install();
     }
 
     return true;
 }
 
+function pear_pay_missing_application_notice(): void
+{
+    echo '<div class="notice notice-error"><p>Error: La clase PearPay\Core\Application no se encontro. Por favor, asegurese de que todos los archivos del plugin esten presentes.</p></div>';
+}
 

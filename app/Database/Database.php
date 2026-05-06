@@ -1,16 +1,23 @@
 <?php
 
-namespace PearPay\Db;
+namespace PearPay\Database;
 
 class Database
 {
-    public static function table_name()
+    /**
+     * Devuelve el nombre real de la tabla usando el prefijo del sitio WordPress.
+     */
+    public static function table_name(): string
     {
         global $wpdb;
+
         return $wpdb->prefix . 'pearpay_options';
     }
 
-    public static function install()
+    /**
+     * Crea o actualiza la tabla al activar el plugin.
+     */
+    public static function install(): void
     {
         global $wpdb;
 

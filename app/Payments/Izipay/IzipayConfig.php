@@ -1,5 +1,5 @@
 <?php
-namespace PearPay\Admin\Izipay;
+namespace PearPay\Payments\Izipay;
 
 class IzipayConfig
 {
@@ -34,6 +34,8 @@ class IzipayConfig
         self::loadDotEnv();
         $env = self::env();
         $prefix = $env === 'production' ? 'PEARPAY_IZIPAY_PROD_' : 'PEARPAY_IZIPAY_DEV_';
+
+        // Se usan constantes primero para permitir configurar credenciales en wp-config.php.
         return [
             'username' => self::getCredential($prefix . 'USERNAME', ''),
             'password' => self::getCredential($prefix . 'PASSWORD', ''),
@@ -45,7 +47,7 @@ class IzipayConfig
 
     private static function getCredential(string $name, string $fallback): string
     {
-        $constant = self::getConstant($name, '');
+        $constant = self::getConstant($name,'');
         if ($constant !== '') {
             return $constant;
         }
@@ -81,6 +83,8 @@ class IzipayConfig
         if (!is_readable($envFile)) {
             return;
         }
+
+        // Carga simple de .env local para desarrollo. En produccion preferir wp-config.php.
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if ($lines === false) {
             return;
