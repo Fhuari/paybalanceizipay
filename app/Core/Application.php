@@ -20,7 +20,6 @@ class Application
         if (is_admin()) {
             new SettingsPage();
         }
-
         new ApiController();
         new PaymentShortcode();
         new PaymentAjaxController();

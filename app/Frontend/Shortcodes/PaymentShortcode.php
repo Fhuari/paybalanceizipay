@@ -110,7 +110,7 @@ class PaymentShortcode
 
         ob_start();
         ?>
-        <div class="pear-pay-public pearpay-root"
+        <div class="pear-pay-public pear-root"
              data-lang="<?php echo esc_attr($lang_code); ?>"
              data-devmode="<?php echo esc_attr(IzipayConfig::env()); ?>"
              data-mode="<?php echo esc_attr($mode); ?>">

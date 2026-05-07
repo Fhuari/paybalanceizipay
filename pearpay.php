@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 if (!defined('PEAR_PAY_VERSION')) {
-    define('PEAR_PAY_VERSION', '1.1.02');
+    define('PEAR_PAY_VERSION', '1.1.03');
 }
 
 if (!defined('PEAR_PAY_PLUGIN_FILE')) {
